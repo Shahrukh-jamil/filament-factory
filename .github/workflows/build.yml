@@ -43,9 +43,9 @@ jobs:
 
       - name: Build Sideload APK Only (Ultra Fast)
         env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD || 'sj292004sja@A12' }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'drawmathic-pi-key' }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'sj292004sja@A12' }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           echo "android.useAndroidX=true" >> gradle.properties
           echo "android.nonTransitiveRClass=true" >> gradle.properties
@@ -61,7 +61,7 @@ jobs:
       - name: Multi-Cloud File Uploads (11 Cloud Hosts)
         run: |
           APK_PATH="app/build/outputs/apk/release/app-release.apk"
-          FINAL_APK_NAME="${{APP_NAME:-App}}.apk"
+          FINAL_APK_NAME="${APP_NAME:-App}.apk"
           cp "$APK_PATH" "$FINAL_APK_NAME"
 
           echo "### 📱 Download Links for ${{ env.APP_NAME }}" >> $GITHUB_STEP_SUMMARY
@@ -95,7 +95,7 @@ jobs:
           URL_FILEIO=$(curl -s -A "Mozilla/5.0" -F "file=@$FINAL_APK_NAME" https://file.io/?expires=7d 2>/dev/null | python3 -c "import sys, json; print(json.load(sys.stdin).get('link',''))" 2>/dev/null || true)
           log_upload "File.io" "$URL_FILEIO"
 
-          URL_UGUU=$(curl -s -A "Mozilla/5.0" -F "files[]=@$FINAL_APK_NAME" https://uguu.se/upload?output=text 2>/dev/null || true)
+          URL_UGUU=$(curl -s -A "Mozilla/5.0" -F "files[]=@$FINAL_APK_NAME" "https://uguu.se/upload?output=text" 2>/dev/null || true)
           log_upload "Uguu.se" "$URL_UGUU"
 
           URL_BASH=$(curl -s -A "Mozilla/5.0" -T "$FINAL_APK_NAME" https://bashupload.com/ 2>/dev/null | grep -o 'https://bashupload.com/[^ ]*' | head -n 1 || true)
