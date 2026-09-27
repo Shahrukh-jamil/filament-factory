@@ -1,0 +1,111 @@
+name: Build Filament Android APK Fast
+
+on:
+  workflow_dispatch:
+    inputs:
+      gist_id:
+        description: 'Gist ID'
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.10' }
+      - run: pip install requests
+      - run: python injector.py ${{ github.event.inputs.gist_id }}
+      - uses: actions/setup-java@v4
+        with: { java-version: '21', distribution: 'temurin' }
+
+      - name: Setup Gradle 8.7
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Decode Keystore Safely with Python
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          python3 -c "
+          import os, base64
+          raw = os.environ.get('KEYSTORE_BASE64', '').strip().replace('\\n', '').replace('\\r', '').replace(' ', '')
+          if not raw:
+              raw = '''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'''
+          missing_padding = len(raw) % 4
+          if missing_padding:
+              raw += '=' * (4 - missing_padding)
+          with open('app/release-key.jks', 'wb') as f:
+              f.write(base64.b64decode(raw))
+          "
+
+      - name: Build Sideload APK Only (Ultra Fast)
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD || 'sj292004sja@A12' }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'drawmathic-pi-key' }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'sj292004sja@A12' }}
+        run: |
+          echo "android.useAndroidX=true" >> gradle.properties
+          echo "android.nonTransitiveRClass=true" >> gradle.properties
+          gradle assembleRelease -Pandroid.useAndroidX=true
+
+      - name: Upload APK to GitHub Artifacts (Always Guaranteed)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-APK
+          path: app/build/outputs/apk/release/app-release.apk
+          retention-days: 7
+
+      - name: Multi-Cloud File Uploads (11 Cloud Hosts)
+        run: |
+          APK_PATH="app/build/outputs/apk/release/app-release.apk"
+          FINAL_APK_NAME="${{APP_NAME:-App}}.apk"
+          cp "$APK_PATH" "$FINAL_APK_NAME"
+
+          echo "### 📱 Download Links for ${{ env.APP_NAME }}" >> $GITHUB_STEP_SUMMARY
+
+          log_upload() {
+            local service="$1"
+            local url="$2"
+            if [[ -n "$url" && "$url" =~ ^https?:// ]]; then
+              echo "✅ $service: $url"
+              echo "- **$service:** [$url]($url)" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "❌ $service: Failed"
+            fi
+          }
+
+          URL_CATBOX=$(curl -s -A "Mozilla/5.0" -F "reqtype=fileupload" -F "fileToUpload=@$FINAL_APK_NAME" https://catbox.moe/user/api.php 2>/dev/null || true)
+          log_upload "Catbox.moe" "$URL_CATBOX"
+
+          URL_LITTER=$(curl -s -A "Mozilla/5.0" -F "reqtype=fileupload" -F "time=72h" -F "fileToUpload=@$FINAL_APK_NAME" https://litterbox.catbox.moe/resources/internals/api.php 2>/dev/null || true)
+          log_upload "Litterbox" "$URL_LITTER"
+
+          URL_TEMP=$(curl -s -A "Mozilla/5.0" -F "file=@$FINAL_APK_NAME" https://temp.sh/upload 2>/dev/null || true)
+          log_upload "Temp.sh" "$URL_TEMP"
+
+          URL_TRANSFER=$(curl -s -A "Mozilla/5.0" -H "Content-Type: application/vnd.android.package-archive" --upload-file "$FINAL_APK_NAME" "https://transfer.sh/$FINAL_APK_NAME" 2>/dev/null || true)
+          log_upload "Transfer.sh" "$URL_TRANSFER"
+
+          URL_KEEP=$(curl -s -A "Mozilla/5.0" --upload-file "$FINAL_APK_NAME" https://free.keep.sh 2>/dev/null || true)
+          log_upload "Keep.sh" "$URL_KEEP"
+
+          URL_FILEIO=$(curl -s -A "Mozilla/5.0" -F "file=@$FINAL_APK_NAME" https://file.io/?expires=7d 2>/dev/null | python3 -c "import sys, json; print(json.load(sys.stdin).get('link',''))" 2>/dev/null || true)
+          log_upload "File.io" "$URL_FILEIO"
+
+          URL_UGUU=$(curl -s -A "Mozilla/5.0" -F "files[]=@$FINAL_APK_NAME" https://uguu.se/upload?output=text 2>/dev/null || true)
+          log_upload "Uguu.se" "$URL_UGUU"
+
+          URL_BASH=$(curl -s -A "Mozilla/5.0" -T "$FINAL_APK_NAME" https://bashupload.com/ 2>/dev/null | grep -o 'https://bashupload.com/[^ ]*' | head -n 1 || true)
+          log_upload "BashUpload" "$URL_BASH"
+
+          URL_OSHI=$(curl -s -A "Mozilla/5.0" -T "$FINAL_APK_NAME" https://oshi.at 2>/dev/null | grep -o 'https://oshi.at/[^ ]*' | head -n 1 || true)
+          log_upload "Oshi.at" "$URL_OSHI"
+
+          URL_ENVS=$(curl -s -A "Mozilla/5.0" -F "file=@$FINAL_APK_NAME" https://envs.sh 2>/dev/null || true)
+          log_upload "Envs.sh" "$URL_ENVS"
+
+          URL_PIXELDRAIN=$(curl -s -A "Mozilla/5.0" -X PUT -T "$FINAL_APK_NAME" "https://pixeldrain.com/api/file/$FINAL_APK_NAME" 2>/dev/null | python3 -c "import sys, json; d=json.load(sys.stdin); print('https://pixeldrain.com/u/' + d['id']) if d.get('success') else None" 2>/dev/null || true)
+          log_upload "Pixeldrain" "$URL_PIXELDRAIN"
